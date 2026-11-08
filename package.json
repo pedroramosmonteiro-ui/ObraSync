@@ -1,0 +1,15 @@
+{
+  "name": "obrasync",
+  "version": "1.0.0",
+  "description": "ObraSync - orçamentos, clientes, materiais e agenda para prestadores de serviço de construção civil",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "express": "^4.19.2"
+  }
+}
