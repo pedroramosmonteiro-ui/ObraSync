@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>ObraSync</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div class="toast-container" id="toastContainer"></div>
+
+<!-- NAV -->
+<nav class="nav">
+  <div class="logo">Obra<span style="-webkit-text-fill-color:var(--text2);font-weight:400">Sync</span></div>
+  <div class="nav-tabs">
+    <button class="nav-tab active" onclick="showPage('novo')"><i class="fas fa-plus-circle"></i><span class="nav-label"> Novo</span></button>
+    <button class="nav-tab" onclick="showPage('orcamentos')"><i class="fas fa-file-invoice-dollar"></i><span class="nav-label"> Orçamentos</span><span class="badge-count" id="countBadge">0</span></button>
+    <button class="nav-tab" onclick="showPage('clientes')"><i class="fas fa-users"></i><span class="nav-label"> Clientes</span></button>
+    <button class="nav-tab" onclick="showPage('agenda')"><i class="fas fa-calendar-alt"></i><span class="nav-label"> Agenda</span></button>
+    <button class="nav-tab" onclick="showPage('materiais')"><i class="fas fa-boxes"></i><span class="nav-label"> Materiais</span></button>
+    <button class="nav-tab" onclick="showPage('dashboard')"><i class="fas fa-chart-bar"></i><span class="nav-label"> Painel</span></button>
+  </div>
+  <div class="nav-right">
+    <button class="btn btn-icon btn-ghost" onclick="toggleTheme()" title="Alternar tema" id="themeBtn"><i class="fas fa-moon"></i></button>
+    <button class="btn btn-sm btn-secondary" onclick="exportData()"><i class="fas fa-download"></i></button>
+  </div>
+</nav>
+
+<!-- ===================== PAGE: NOVO ORÇAMENTO ===================== -->
+<div class="page active" id="page-novo">
+  <div class="page-header">
+    <div>
+      <h2><i class="fas fa-hard-hat" style="color:var(--gold)"></i> Novo Orçamento</h2>
+      <p>Preencha os dados abaixo para gerar um orçamento profissional</p>
+    </div>
+    <div class="page-header-actions">
+      <button class="btn btn-ghost btn-sm" onclick="clearForm()"><i class="fas fa-undo"></i> Limpar</button>
+      <button class="btn btn-green btn-sm" onclick="saveOrcamento()"><i class="fas fa-save"></i> Salvar</button>
+      <button class="btn btn-gold btn-lg" onclick="saveAndGenerate()"><i class="fas fa-file-pdf"></i> Gerar PDF</button>
+    </div>
+  </div>
+
+  <!-- STEP -->
+  <div class="step-indicator">
+    <div class="step active" onclick="scrollToSection('sec-cliente')"><i class="fas fa-user"></i><span class="step-text"> Cliente</span></div>
+    <div class="step" onclick="scrollToSection('sec-servico')"><i class="fas fa-wrench"></i><span class="step-text"> Serviço</span></div>
+    <div class="step" onclick="scrollToSection('sec-materiais')"><i class="fas fa-boxes"></i><span class="step-text"> Materiais</span></div>
+    <div class="step" onclick="scrollToSection('sec-maodeobra')"><i class="fas fa-hammer"></i><span class="step-text"> M.O.</span></div>
+    <div class="step" onclick="scrollToSection('sec-financeiro')"><i class="fas fa-dollar-sign"></i><span class="step-text"> Financeiro</span></div>
+    <div class="step" onclick="scrollToSection('sec-empresa')"><i class="fas fa-building"></i><span class="step-text"> Empresa</span></div>
+    <div class="step" onclick="scrollToSection('sec-fotos')"><i class="fas fa-camera"></i><span class="step-text"> Fotos</span></div>
+  </div>
+
+  <!-- TEMPLATES -->
+  <div id="sec-templates" style="margin-bottom:1.25rem">
+    <div style="font-size:.75rem;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;font-weight:600;margin-bottom:.5rem"><i class="fas fa-magic" style="color:var(--purple);margin-right:5px"></i> Templates rápidos</div>
+    <div class="template-chips" id="templateChips"></div>
+  </div>
+
+  <!-- CLIENTE -->
+  <div class="card" id="sec-cliente">
+    <div class="card-title"><i class="fas fa-user-circle ic-blue"></i> Dados do Cliente</div>
+    <div class="grid-3" style="margin-bottom:1rem">
+      <div class="field"><label>Nome completo *</label><input id="clientName" type="text" placeholder="Ex: João da Silva" autocomplete="off"></div>
+      <div class="field"><label>Telefone / WhatsApp *</label><input id="clientPhone" type="tel" placeholder="(51) 99999-0000"></div>
+      <div class="field"><label>E-mail</label><input id="clientEmail" type="email" placeholder="joao@email.com"></div>
+    </div>
+    <div class="grid-2">
+      <div class="field"><label>Endereço da obra *</label><input id="clientAddress" type="text" placeholder="Rua, número, bairro, cidade"></div>
+      <div class="field"><label>Data do orçamento</label><input id="orcDate" type="date"></div>
+    </div>
+  </div>
+
+  <!-- SERVIÇO -->
+  <div class="card" id="sec-servico">
+    <div class="card-title"><i class="fas fa-tools ic-gold"></i> Tipo de Serviço</div>
+    <div class="grid-3" style="margin-bottom:1rem">
+      <div class="field">
+        <label>Categoria *</label>
+        <select id="serviceType">
+          <option value="">Selecione...</option>
+          <option>🎨 Pintura</option><option>⚡ Elétrica</option><option>🔧 Hidráulica</option>
+          <option>🔨 Reparo Geral</option><option>🏠 Reforma</option><option>📦 Instalação</option>
+          <option>🔩 Manutenção</option><option>🧱 Alvenaria / Construção</option><option>🪵 Marcenaria</option>
+          <option>🔒 Serralheria</option><option>🌿 Jardinagem</option><option>❄️ Ar-Condicionado</option>
+          <option>🚪 Esquadrias</option><option>🏊 Piscinas</option><option>🪛 Outro</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Status</label>
+        <select id="statusType">
+          <option value="analise">🔵 Em Análise</option><option value="aprovado">🟢 Aprovado</option>
+          <option value="andamento">🟡 Em Andamento</option><option value="finalizado">✅ Finalizado</option>
+          <option value="cancelado">🔴 Cancelado</option>
+        </select>
+      </div>
+      <div class="field"><label>Prazo de execução</label><input id="prazo" type="text" placeholder="Ex: 5 dias úteis"></div>
+    </div>
+    <div class="grid-2" style="margin-bottom:.75rem">
+      <div class="field">
+        <label>Descrição do serviço</label>
+        <textarea id="serviceDesc" placeholder="Descreva os serviços a executar..."></textarea>
+      </div>
+      <div class="field"><label>Observações / Condições</label><textarea id="serviceObs" placeholder="Ex: Pagamento na conclusão, garantia de 90 dias..."></textarea></div>
+    </div>
+    <div class="grid-2">
+      <div class="field"><label>Garantia</label><input id="garantia" type="text" placeholder="Ex: 6 meses para elétrica"></div>
+      <div class="field"><label>Validade do orçamento</label><input id="validade" type="text" placeholder="Ex: 15 dias" value="15 dias"></div>
+    </div>
+  </div>
+
+  <!-- MATERIAIS -->
+  <div class="card" id="sec-materiais">
+    <div class="card-title"><i class="fas fa-boxes ic-cyan"></i> Lista de Materiais</div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th style="width:35%">Material</th>
+            <th style="width:9%">Qtd</th>
+            <th style="width:10%">Unidade</th>
+            <th style="width:14%">Valor Unit.</th>
+            <th style="width:12%">Total</th>
+            <th style="width:12%">c/ Lucro</th>
+            <th style="width:8%"></th>
+          </tr>
+        </thead>
+        <tbody id="materialsBody"></tbody>
+      </table>
+    </div>
+    <div style="display:flex;gap:.75rem;margin-top:1rem;align-items:center;flex-wrap:wrap">
+      <button class="btn btn-secondary btn-sm" onclick="addMaterial()"><i class="fas fa-plus"></i> Adicionar</button>
+      <button class="btn btn-purple btn-sm" onclick="openMatBank()"><i class="fas fa-database"></i> Banco de Materiais</button>
+      <span style="font-size:.8rem;color:var(--text3);margin-left:auto">Subtotal: <strong id="subMaterials" style="color:var(--accent)">R$ 0,00</strong></span>
+    </div>
+    <!-- ÁREA M2 -->
+    <div style="margin-top:1rem;padding:1rem;background:var(--bg3);border-radius:var(--radius-xs);border:1px solid var(--border)">
+      <div style="font-size:.78rem;color:var(--text2);font-weight:600;margin-bottom:.5rem"><i class="fas fa-ruler-combined" style="color:var(--cyan);margin-right:5px"></i> Calculadora de Área</div>
+      <div style="display:flex;gap:.75rem;align-items:center;flex-wrap:wrap">
+        <div class="field" style="flex:1;min-width:100px"><label>Largura (m)</label><input id="largura" type="number" placeholder="0" step="0.01" oninput="calcArea()"></div>
+        <div class="field" style="flex:1;min-width:100px"><label>Altura/Comp. (m)</label><input id="altura" type="number" placeholder="0" step="0.01" oninput="calcArea()"></div>
+        <div style="display:flex;flex-direction:column;gap:4px;min-width:120px">
+          <div style="font-size:.72rem;color:var(--text3)">Área calculada</div>
+          <div id="areaResult" style="font-size:1.1rem;font-weight:700;color:var(--cyan);font-family:var(--font-display)">0,00 m²</div>
+        </div>
+        <button class="btn btn-sm" style="background:var(--cyan-g);color:var(--cyan);border:1px solid rgba(6,182,212,.25)" onclick="addAreaToDesc()"><i class="fas fa-plus"></i> Adicionar à descrição</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MÃO DE OBRA -->
+  <div class="card" id="sec-maodeobra">
+    <div class="card-title"><i class="fas fa-hard-hat ic-gold"></i> Mão de Obra</div>
+    <div class="grid-4">
+      <div class="field"><label>Horas trabalhadas</label><input id="horas" type="number" min="0" placeholder="0" oninput="calcMO()"></div>
+      <div class="field"><label>Nº funcionários</label><input id="funcionarios" type="number" min="1" value="1" oninput="calcMO()"></div>
+      <div class="field"><label>Valor por hora (R$)</label><input id="valorHora" type="number" min="0" placeholder="0,00" oninput="calcMO()"></div>
+      <div class="field"><label>Total mão de obra (R$)</label><input id="totalMO" type="number" min="0" placeholder="0,00" oninput="updateTotals()" style="border-color:var(--gold);font-weight:600"></div>
+    </div>
+    <!-- CUSTOS EXTRAS inline -->
+    <hr class="divider">
+    <div style="font-size:.78rem;color:var(--text2);font-weight:600;margin-bottom:.75rem"><i class="fas fa-truck" style="color:var(--accent);margin-right:5px"></i> Custos Extras</div>
+    <div class="grid-3">
+      <div class="field"><label><i class="fas fa-car" style="margin-right:3px"></i> Transporte</label><input id="transporte" type="number" min="0" placeholder="0,00" oninput="updateTotals()"></div>
+      <div class="field"><label><i class="fas fa-shipping-fast" style="margin-right:3px"></i> Frete</label><input id="frete" type="number" min="0" placeholder="0,00" oninput="updateTotals()"></div>
+      <div class="field"><label><i class="fas fa-utensils" style="margin-right:3px"></i> Alimentação</label><input id="alimentacao" type="number" min="0" placeholder="0,00" oninput="updateTotals()"></div>
+      <div class="field"><label><i class="fas fa-tools" style="margin-right:3px"></i> Equipamentos</label><input id="equipamentos" type="number" min="0" placeholder="0,00" oninput="updateTotals()"></div>
+      <div class="field"><label><i class="fas fa-receipt" style="margin-right:3px"></i> Taxas</label><input id="taxas" type="number" min="0" placeholder="0,00" oninput="updateTotals()"></div>
+      <div class="field"><label><i class="fas fa-plus-circle" style="margin-right:3px"></i> Outros</label><input id="outros" type="number" min="0" placeholder="0,00" oninput="updateTotals()"></div>
+    </div>
+  </div>
+
+  <!-- FINANCEIRO -->
+  <div class="card" id="sec-financeiro">
+    <div class="card-title"><i class="fas fa-calculator ic-blue"></i> Resumo Financeiro</div>
+    <div class="grid-2">
+      <div>
+        <div class="total-section">
+          <div class="total-line"><span>Subtotal materiais</span><span id="t_materiais">R$ 0,00</span></div>
+          <div class="total-line"><span>Mão de obra</span><span id="t_mo">R$ 0,00</span></div>
+          <div class="total-line"><span>Custos extras</span><span id="t_extras">R$ 0,00</span></div>
+          <div class="total-line"><span style="font-weight:600">Custo total</span><span id="t_subtotal" style="font-weight:600">R$ 0,00</span></div>
+          <div class="total-line" style="margin-top:8px;padding-top:8px;border-top:1px dashed var(--border)">
+            <span>Margem de lucro (%)</span>
+            <span style="color:var(--green)"><input type="number" id="margemLucro" min="0" max="200" value="20" style="background:transparent;border:none;color:var(--green);font-family:var(--font-body);font-size:.88rem;width:55px;text-align:right" oninput="updateTotals()"> %</span>
+          </div>
+          <div class="total-line profit"><span><i class="fas fa-arrow-up" style="font-size:.7rem;margin-right:3px"></i> Lucro líquido</span><span class="val" id="t_lucro">R$ 0,00</span></div>
+          <div class="total-line"><span>Desconto (%)</span><span style="color:var(--red)"><input type="number" id="desconto" min="0" max="100" value="0" style="background:transparent;border:none;color:var(--red);font-family:var(--font-body);font-size:.88rem;width:55px;text-align:right" oninput="updateTotals()"> %</span></div>
+          <div class="total-line main"><span>TOTAL FINAL</span><span class="val" id="t_total">R$ 0,00</span></div>
+        </div>
+        <!-- LUCRO METER -->
+        <div class="lucro-meter">
+          <div style="font-size:.72rem;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;font-weight:600">Rentabilidade</div>
+          <div class="lucro-bar-wrap"><div class="lucro-bar" id="lucroBar" style="width:20%"></div></div>
+          <div class="lucro-row">
+            <span style="color:var(--text2);font-size:.78rem">Custo: <strong id="lucro_custo" style="color:var(--red)">R$ 0</strong></span>
+            <span style="font-size:.78rem">Margem: <strong id="lucro_pct" style="color:var(--green)">20%</strong></span>
+            <span style="color:var(--text2);font-size:.78rem">Lucro: <strong id="lucro_val" style="color:var(--green)">R$ 0</strong></span>
+          </div>
+        </div>
+        <div style="margin-top:1rem" class="grid-2">
+          <div class="field"><label>Entrada (R$)</label><input id="entrada" type="number" min="0" placeholder="0,00" oninput="updateTotals()"></div>
+          <div class="field"><label>Parcelamento</label><select id="parcelas"><option>À vista</option><option>2x</option><option>3x</option><option>4x</option><option>5x</option><option>6x</option><option>10x</option><option>12x</option></select></div>
+        </div>
+        <div class="field" style="margin-top:.75rem"><label>Forma de pagamento</label>
+          <select id="pagamento"><option>Dinheiro</option><option>PIX</option><option>Cartão de Crédito</option><option>Cartão de Débito</option><option>Transferência Bancária</option><option>Cheque</option><option>Boleto</option></select>
+        </div>
+      </div>
+      <!-- PERCENTUAIS -->
+      <div>
+        <div class="grid-2 summary-mini" style="margin-bottom:.75rem">
+          <div style="background:var(--bg3);border-radius:var(--radius-xs);padding:.85rem;text-align:center;border:1px solid var(--border)">
+            <div style="font-size:.72rem;color:var(--text2);text-transform:uppercase;font-weight:600">Materiais</div>
+            <div id="s_mat" style="font-family:var(--font-display);font-size:1.3rem;font-weight:700;color:var(--accent);margin:.2rem 0">0%</div>
+          </div>
+          <div style="background:var(--bg3);border-radius:var(--radius-xs);padding:.85rem;text-align:center;border:1px solid var(--border)">
+            <div style="font-size:.72rem;color:var(--text2);text-transform:uppercase;font-weight:600">Mão de Obra</div>
+            <div id="s_mo" style="font-family:var(--font-display);font-size:1.3rem;font-weight:700;color:var(--gold);margin:.2rem 0">0%</div>
+          </div>
+          <div style="background:var(--bg3);border-radius:var(--radius-xs);padding:.85rem;text-align:center;border:1px solid var(--border)">
+            <div style="font-size:.72rem;color:var(--text2);text-transform:uppercase;font-weight:600">Extras</div>
+            <div id="s_ext" style="font-family:var(--font-display);font-size:1.3rem;font-weight:700;color:var(--green);margin:.2rem 0">0%</div>
+          </div>
+          <div style="background:var(--bg3);border-radius:var(--radius-xs);padding:.85rem;text-align:center;border:1px solid var(--border)">
+            <div style="font-size:.72rem;color:var(--text2);text-transform:uppercase;font-weight:600">Saldo</div>
+            <div id="s_saldo" style="font-family:var(--font-display);font-size:1rem;font-weight:700;color:var(--text);margin:.2rem 0">R$ 0</div>
+          </div>
+        </div>
+        <!-- PIX -->
+        <div id="pixCard" style="display:none">
+          <div class="pix-card">
+            <div class="pix-qr" id="pixQrDiv"><canvas id="pixQrCanvas" width="80" height="80"></canvas></div>
+            <div class="pix-info">
+              <div class="pix-label">Chave PIX</div>
+              <div class="pix-key" id="pixKeyDisplay">—</div>
+              <div style="font-size:.72rem;color:var(--text3);margin-top:4px">Incluso no PDF automaticamente</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- EMPRESA -->
+  <div class="card" id="sec-empresa">
+    <div class="card-title"><i class="fas fa-building ic-purple"></i> Dados da Empresa</div>
+    <div class="grid-2" style="margin-bottom:.75rem">
+      <div class="field"><label>Logo da empresa</label>
+        <div style="display:flex;gap:.75rem;align-items:center">
+          <div id="logoPreview" style="width:70px;height:70px;border:2px dashed var(--border);border-radius:var(--radius-xs);display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0;cursor:pointer;background:var(--bg3)" onclick="document.getElementById('logoInput').click()">
+            <img id="logoImg" src="" style="display:none;width:100%;height:100%;object-fit:contain">
+            <i class="fas fa-image" style="color:var(--text3);font-size:1.25rem" id="logoPlaceholder"></i>
+          </div>
+          <div>
+            <button class="btn btn-secondary btn-sm" onclick="document.getElementById('logoInput').click()"><i class="fas fa-upload"></i> Upload Logo</button>
+            <div class="hint" style="margin-top:4px">PNG/JPG • Aparece no PDF</div>
+            <input type="file" id="logoInput" accept="image/*" style="display:none" onchange="loadLogo(event)">
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="field" style="margin-bottom:.75rem"><label>Nome da empresa *</label><input id="empresa" type="text" placeholder="Sua Empresa de Obras"></div>
+        <div class="grid-2">
+          <div class="field"><label>CNPJ / CPF</label><input id="cnpj" type="text" placeholder="00.000.000/0001-00"></div>
+          <div class="field"><label>Telefone</label><input id="empTel" type="text" placeholder="(51) 3000-0000"></div>
+        </div>
+      </div>
+    </div>
+    <div class="grid-2">
+      <div class="field"><label>E-mail da empresa</label><input id="empEmail" type="email" placeholder="contato@empresa.com"></div>
+      <div class="field"><label>Site / Instagram</label><input id="empSite" type="text" placeholder="@empresa ou www.empresa.com"></div>
+    </div>
+    <hr class="divider">
+    <!-- PIX Config -->
+    <div style="font-size:.78rem;color:var(--text2);font-weight:600;margin-bottom:.75rem"><i class="fas fa-qrcode" style="color:var(--green);margin-right:5px"></i> PIX no PDF</div>
+    <div class="grid-2">
+      <div class="field"><label>Chave PIX</label><input id="pixKey" type="text" placeholder="CPF, e-mail, telefone ou chave aleatória" oninput="updatePixCard()"></div>
+      <div class="field"><label>Nome do recebedor PIX</label><input id="pixNome" type="text" placeholder="Nome completo ou empresa"></div>
+    </div>
+  </div>
+
+  <!-- FOTOS -->
+  <div class="card" id="sec-fotos">
+    <div class="card-title"><i class="fas fa-camera ic-green"></i> Fotos da Obra <span style="font-size:.72rem;font-weight:400;color:var(--green);margin-left:auto">✓ Incluídas no PDF</span></div>
+    <div class="upload-zone" onclick="document.getElementById('photoInput').click()">
+      <i class="fas fa-cloud-upload-alt"></i>
+      <div>Clique para adicionar fotos antes/depois da obra</div>
+      <div style="font-size:.75rem;margin-top:.3rem;color:var(--text3)">JPG, PNG — múltiplos arquivos • As fotos entram no PDF</div>
+    </div>
+    <input type="file" id="photoInput" accept="image/*" multiple style="display:none" onchange="addPhotos(event)">
+    <div class="photo-grid" id="photoGrid"></div>
+  </div>
+
+  <!-- ASSINATURA -->
+  <div class="card">
+    <div class="card-title"><i class="fas fa-signature ic-blue"></i> Assinaturas</div>
+    <div class="grid-2">
+      <div>
+        <div style="font-size:.78rem;color:var(--text2);font-weight:600;margin-bottom:.5rem">Assinatura do Cliente</div>
+        <div class="sig-wrap">
+          <canvas id="sigCanvas" class="sig-canvas" width="600" height="150"></canvas>
+          <div class="sig-label">Assine acima com o mouse ou dedo</div>
+        </div>
+        <div style="margin-top:.5rem">
+          <button class="btn btn-ghost btn-sm" onclick="clearSignature('sigCanvas')"><i class="fas fa-eraser"></i> Limpar</button>
+        </div>
+      </div>
+      <div>
+        <div style="font-size:.78rem;color:var(--text2);font-weight:600;margin-bottom:.5rem">Assinatura do Prestador</div>
+        <div class="sig-wrap">
+          <canvas id="sigCanvas2" class="sig-canvas" width="600" height="150"></canvas>
+          <div class="sig-label">Assine acima com o mouse ou dedo</div>
+        </div>
+        <div style="margin-top:.5rem">
+          <button class="btn btn-ghost btn-sm" onclick="clearSignature('sigCanvas2')"><i class="fas fa-eraser"></i> Limpar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- AÇÕES FINAIS -->
+  <div style="display:flex;gap:.75rem;flex-wrap:wrap;padding:.75rem 0 2.5rem">
+    <button class="btn btn-gold btn-lg" onclick="saveAndGenerate()"><i class="fas fa-file-pdf"></i> Gerar PDF Profissional</button>
+    <button class="whatsapp-btn" onclick="sendWhatsApp()"><i class="fab fa-whatsapp"></i> Enviar WhatsApp</button>
+    <button class="btn btn-green" onclick="saveOrcamento()"><i class="fas fa-save"></i> Salvar</button>
+    <button class="btn btn-secondary" onclick="generateContract()"><i class="fas fa-file-contract"></i> Contrato</button>
+  </div>
+</div>
+
+<!-- ===================== PAGE: ORÇAMENTOS ===================== -->
+<div class="page" id="page-orcamentos">
+  <div class="page-header">
+    <div><h2><i class="fas fa-file-invoice-dollar" style="color:var(--accent)"></i> Orçamentos</h2><p>Gerencie todos os orçamentos</p></div>
+    <div class="page-header-actions">
+      <button class="btn btn-secondary btn-sm" onclick="exportData()"><i class="fas fa-download"></i> Exportar</button>
+      <button class="btn btn-primary" onclick="showPage('novo')"><i class="fas fa-plus"></i> Novo</button>
+    </div>
+  </div>
+  <div style="display:flex;gap:.75rem;margin-bottom:1rem;flex-wrap:wrap">
+    <input type="text" class="search-bar" style="margin:0;flex:1;min-width:200px" placeholder="Buscar por nome, serviço ou status..." oninput="filterOrcamentos(this.value)">
+    <select class="search-bar" style="margin:0;width:160px" onchange="filterOrcamentos(document.querySelector('.search-bar').value,this.value)" id="filterStatus">
+      <option value="">Todos os status</option>
+      <option value="analise">Em Análise</option>
+      <option value="aprovado">Aprovado</option>
+      <option value="andamento">Em Andamento</option>
+      <option value="finalizado">Finalizado</option>
+      <option value="cancelado">Cancelado</option>
+    </select>
+  </div>
+  <div id="orcamentosList"></div>
+</div>
+
+<!-- ===================== PAGE: CLIENTES ===================== -->
+<div class="page" id="page-clientes">
+  <div class="page-header">
+    <div><h2><i class="fas fa-users" style="color:var(--accent)"></i> Clientes</h2><p>Histórico de clientes</p></div>
+  </div>
+  <input type="text" class="search-bar" placeholder="Buscar cliente..." oninput="filterClientes(this.value)">
+  <div id="clientesList"></div>
+</div>
+
+<!-- ===================== PAGE: AGENDA ===================== -->
+<div class="page" id="page-agenda">
+  <div class="page-header">
+    <div><h2><i class="fas fa-calendar-alt" style="color:var(--accent)"></i> Agenda de Obras</h2><p>Calendário de visitas e serviços</p></div>
+    <div class="page-header-actions">
+      <button class="btn btn-primary btn-sm" onclick="openAddEvento()"><i class="fas fa-plus"></i> Novo Evento</button>
+    </div>
+  </div>
+  <div class="grid-2" style="gap:1.5rem">
+    <div class="card">
+      <div class="cal-nav">
+        <button class="btn btn-icon btn-ghost" onclick="changeMonth(-1)"><i class="fas fa-chevron-left"></i></button>
+        <h3 id="calTitle"></h3>
+        <button class="btn btn-icon btn-ghost" onclick="changeMonth(1)"><i class="fas fa-chevron-right"></i></button>
+      </div>
+      <div class="cal-header">
+        <div class="cal-day-name">DOM</div><div class="cal-day-name">SEG</div><div class="cal-day-name">TER</div>
+        <div class="cal-day-name">QUA</div><div class="cal-day-name">QUI</div><div class="cal-day-name">SEX</div>
+        <div class="cal-day-name">SÁB</div>
+      </div>
+      <div class="calendar-grid" id="calGrid"></div>
+    </div>
+    <div class="card">
+      <div class="card-title"><i class="fas fa-list-ul ic-gold"></i> Eventos do Mês</div>
+      <div id="eventosList"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== PAGE: MATERIAIS ===================== -->
+<div class="page" id="page-materiais">
+  <div class="page-header">
+    <div><h2><i class="fas fa-boxes" style="color:var(--accent)"></i> Banco de Materiais</h2><p>Catálogo com preços salvos — autocomplete na tabela</p></div>
+    <div class="page-header-actions">
+      <button class="btn btn-primary btn-sm" onclick="openAddMaterial()"><i class="fas fa-plus"></i> Novo Material</button>
+    </div>
+  </div>
+  <input type="text" class="search-bar" placeholder="Buscar material..." oninput="filterMatBank(this.value)">
+  <div id="matBankList"></div>
+</div>
+
+<!-- ===================== PAGE: DASHBOARD ===================== -->
+<div class="page" id="page-dashboard">
+  <div class="page-header">
+    <div><h2><i class="fas fa-chart-bar" style="color:var(--accent)"></i> Painel</h2><p>Visão geral do negócio</p></div>
+    <div class="page-header-actions">
+      <button class="btn btn-secondary btn-sm" onclick="exportData()"><i class="fas fa-download"></i> Backup</button>
+    </div>
+  </div>
+  <div class="grid-4" style="margin-bottom:1.5rem">
+    <div class="stat-card blue"><div class="bg-glow"></div><div class="stat-icon"><i class="fas fa-file-invoice-dollar"></i></div><div class="stat-value" id="dash_total">0</div><div class="stat-label">Orçamentos</div></div>
+    <div class="stat-card gold"><div class="bg-glow"></div><div class="stat-icon"><i class="fas fa-dollar-sign"></i></div><div class="stat-value" id="dash_faturamento">R$ 0</div><div class="stat-label">Faturamento</div><div class="stat-sub" id="dash_fat_sub"></div></div>
+    <div class="stat-card green"><div class="bg-glow"></div><div class="stat-icon"><i class="fas fa-trending-up"></i></div><div class="stat-value" id="dash_lucro_total">R$ 0</div><div class="stat-label">Lucro Total</div><div class="stat-sub" id="dash_lucro_sub"></div></div>
+    <div class="stat-card purple"><div class="bg-glow"></div><div class="stat-icon"><i class="fas fa-users"></i></div><div class="stat-value" id="dash_clientes">0</div><div class="stat-label">Clientes</div></div>
+  </div>
+  <div class="grid-2" style="margin-bottom:1.5rem">
+    <div class="stat-card blue"><div class="bg-glow"></div><div class="stat-icon"><i class="fas fa-check-circle"></i></div><div class="stat-value" id="dash_aprov">0</div><div class="stat-label">Aprovados</div></div>
+    <div class="stat-card gold"><div class="bg-glow"></div><div class="stat-icon"><i class="fas fa-times-circle"></i></div><div class="stat-value" id="dash_cancel">0</div><div class="stat-label">Cancelados</div></div>
+  </div>
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-title"><i class="fas fa-chart-pie ic-blue"></i> Serviços mais solicitados</div>
+      <div id="dash_services"></div>
+    </div>
+    <div class="card">
+      <div class="card-title"><i class="fas fa-chart-line ic-gold"></i> Faturamento mensal</div>
+      <div id="dash_mensal"></div>
+    </div>
+  </div>
+  <div class="card" style="margin-top:1.25rem">
+    <div class="card-title"><i class="fas fa-list-ol ic-green"></i> Orçamentos recentes</div>
+    <div id="dash_recent"></div>
+  </div>
+</div>
+
+<!-- MODAL: CONTRATO -->
+<div class="modal-overlay" id="contractModal">
+  <div class="modal" style="position:relative">
+    <button class="modal-close" onclick="closeModal('contractModal')"><i class="fas fa-times"></i></button>
+    <h2><i class="fas fa-file-contract" style="color:var(--accent)"></i> Contrato de Prestação de Serviços</h2>
+    <div id="contractContent" style="font-size:.85rem;line-height:1.75;color:var(--text2);max-height:50vh;overflow-y:auto;padding-right:.5rem"></div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal('contractModal')">Fechar</button>
+      <button class="btn btn-primary" onclick="copyContract()"><i class="fas fa-copy"></i> Copiar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: BANCO DE MATERIAIS (picker) -->
+<div class="modal-overlay" id="matBankModal">
+  <div class="modal" style="position:relative">
+    <button class="modal-close" onclick="closeModal('matBankModal')"><i class="fas fa-times"></i></button>
+    <h2><i class="fas fa-database" style="color:var(--purple)"></i> Banco de Materiais</h2>
+    <input type="text" class="search-bar" style="margin-bottom:.75rem" placeholder="Buscar material..." oninput="renderMatBankModal(this.value)">
+    <div id="matBankModalList" style="max-height:50vh;overflow-y:auto"></div>
+  </div>
+</div>
+
+<!-- MODAL: ADD/EDIT MATERIAL -->
+<div class="modal-overlay" id="addMaterialModal">
+  <div class="modal" style="position:relative">
+    <button class="modal-close" onclick="closeModal('addMaterialModal')"><i class="fas fa-times"></i></button>
+    <h2><i class="fas fa-plus-circle" style="color:var(--green)"></i> <span id="addMatTitle">Novo Material</span></h2>
+    <input type="hidden" id="editMatId">
+    <div class="grid-2" style="margin-bottom:.75rem">
+      <div class="field"><label>Nome *</label><input id="matName" type="text" placeholder="Ex: Cimento 50kg"></div>
+      <div class="field"><label>Unidade</label><input id="matUnit" type="text" placeholder="Ex: sc, m², un, kg"></div>
+    </div>
+    <div class="field" style="margin-bottom:.75rem"><label>Preço Unitário (R$) *</label><input id="matPrice" type="number" min="0" step="0.01" placeholder="0,00"></div>
+    <div class="field" style="margin-bottom:1rem"><label>Categoria</label>
+      <select id="matCat">
+        <option>Cimento / Argamassa</option><option>Areia / Brita</option><option>Tinta / Textura</option>
+        <option>Elétrica</option><option>Hidráulica</option><option>Madeira / Compensado</option>
+        <option>Ferragens</option><option>Revestimento</option><option>Ferramentas</option><option>Outros</option>
+      </select>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal('addMaterialModal')">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveMaterialToBank()"><i class="fas fa-save"></i> Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: ADD EVENTO -->
+<div class="modal-overlay" id="addEventoModal">
+  <div class="modal" style="position:relative">
+    <button class="modal-close" onclick="closeModal('addEventoModal')"><i class="fas fa-times"></i></button>
+    <h2><i class="fas fa-calendar-plus" style="color:var(--gold)"></i> Novo Evento</h2>
+    <div class="field" style="margin-bottom:.75rem"><label>Título *</label><input id="eventoTitulo" type="text" placeholder="Ex: Visita técnica - João Silva"></div>
+    <div class="grid-2" style="margin-bottom:.75rem">
+      <div class="field"><label>Data *</label><input id="eventoData" type="date"></div>
+      <div class="field"><label>Hora</label><input id="eventoHora" type="time" value="08:00"></div>
+    </div>
+    <div class="field" style="margin-bottom:.75rem"><label>Tipo</label>
+      <select id="eventoTipo">
+        <option value="visita">🔍 Visita técnica</option>
+        <option value="obra">🔨 Obra em andamento</option>
+        <option value="entrega">✅ Entrega do serviço</option>
+        <option value="reuniao">🤝 Reunião</option>
+        <option value="outro">📌 Outro</option>
+      </select>
+    </div>
+    <div class="field" style="margin-bottom:1rem"><label>Observações</label><textarea id="eventoObs" placeholder="Detalhes adicionais..." style="min-height:60px"></textarea></div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal('addEventoModal')">Cancelar</button>
+      <button class="btn btn-gold" onclick="saveEvento()"><i class="fas fa-calendar-check"></i> Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- PDF PREVIEW (hidden) -->
+<div id="pdf-preview" style="position:fixed;left:-9999px;top:0;background:#fff;color:#000;width:800px;font-family:Arial,sans-serif"></div>
+
+<script src="js/storage.js"></script>
+</body>
+</html>
